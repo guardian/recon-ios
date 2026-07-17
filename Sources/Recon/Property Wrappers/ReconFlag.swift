@@ -18,7 +18,7 @@ public enum KeySelection: Sendable {
 ///     @ReconFlag(\.someCoolProvider, .all)
 ///     private var allFlags: [SomeCoolProviderKey]
 @propertyWrapper
-public struct MyRCFlag<Provider: ReconRemoteConfigProvider, Value> {
+public struct ReconFlag<Provider: ReconRemoteConfigProvider, Value> {
 
     private let read: @MainActor () -> Value
 
