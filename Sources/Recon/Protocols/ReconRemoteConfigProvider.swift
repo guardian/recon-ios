@@ -7,8 +7,8 @@ public protocol ReconRemoteConfigProvider {
     associatedtype Key: ReconConfigKey & CaseIterable
 
     func refresh() async
-    @discardableResult
     func value(for key: Key) -> ReconConfigValue
+    func source(for key: Key) -> ReconConfigSource
 }
 
 extension ReconRemoteConfigProvider {
