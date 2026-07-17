@@ -6,10 +6,7 @@ import PackageDescription
 let package = Package(
     name: "Recon",
     platforms: [
-        .iOS(.v15),
-        .macOS(.v10_15),
-        .tvOS(.v15),
-        .visionOS(.v1),
+        .iOS(.v18)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -22,11 +19,17 @@ let package = Package(
             targets: ["ReconKeygenPlugin"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/guardian/qalam.git", from: "1.0.4"),
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Recon"
+            name: "Recon",
+            dependencies: [
+                .product(name: "Qalam", package: "qalam")
+            ]
         ),
         .executableTarget(
             name: "recon-keygen"
