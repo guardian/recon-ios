@@ -1,4 +1,5 @@
 import Foundation
+import Qalam
 
 // Some provider like Firebase, Mobile Static etc
 @MainActor
@@ -52,14 +53,8 @@ extension ReconRemoteConfigProvider {
 
     private func checkedValue(for key: Key, accessedAs type: ReconConfigValueType) -> ReconConfigValue {
         if key.expectedType != type {
-            let message = "MyRC: '\(key.rawKey)' is declared as .\(key.expectedType.rawValue) but was accessed as .\(type.rawValue)"
-            print("⚠️ \(message)")
-            // Asserting inside SwiftUI previews would tear down the canvas,
-            // so there the mismatch is only logged.
-            let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-            if !isPreview {
-                assertionFailure(message)
-            }
+            let message = "'\(key.rawKey)' is declared as .\(key.expectedType.rawValue) but was accessed as .\(type.rawValue)"
+            Log.error(message, .named("Recon"))
         }
         return value(for: key)
     }
