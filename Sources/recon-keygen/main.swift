@@ -141,13 +141,13 @@ func configType(for value: Any, key: String) -> String {
 let sortedKeys = defaults.keys.sorted()
 
 var output = """
-// AUTO-GENERATED from \(inputPath.split(separator: "/").last ?? "plist") — do not edit by hand.
+// AUTO-GENERATED from \(inputPath.split(separator: "/").last ?? "plist") by Recon — do not edit by hand.
 //
 // The Guardian.
 
 import Recon
 
-enum \(enumName)Key: String, RemoteConfigKey, CaseIterable {
+enum \(enumName)Key: String, ReconConfigKey, CaseIterable {
 
 """
 
@@ -157,7 +157,7 @@ for key in sortedKeys {
 
 output += """
 
-    var defaultValue: ConfigValue {
+    var defaultValue: ReconConfigValue {
         switch self {
 
 """
@@ -170,7 +170,7 @@ output += """
         }
     }
 
-    var expectedType: ConfigType {
+    var expectedType: ReconConfigValueType {
         switch self {
 
 """
