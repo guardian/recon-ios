@@ -142,11 +142,12 @@ let sortedKeys = defaults.keys.sorted()
 
 var output = """
 // AUTO-GENERATED from \(inputPath.split(separator: "/").last ?? "plist") — do not edit by hand.
-// Usman.
+//
+// The Guardian.
 
-import MyRC
+import Recon
 
-enum \(enumName): String, RemoteConfigKey, CaseIterable {
+enum \(enumName)Key: String, RemoteConfigKey, CaseIterable {
 
 """
 
