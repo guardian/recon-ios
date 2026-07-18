@@ -1,11 +1,6 @@
 import Foundation
 import Qalam
 
-/// Selects a group of keys rather than a single one, for use with ``ReconFlag``.
-public enum KeySelection: Sendable {
-    case all
-}
-
 /// Reads a remote config value as a typed property:
 ///
 ///     @ReconFlag(\.someCoolProvider, .amazingText)
@@ -22,7 +17,7 @@ public struct ReconFlag<Provider: ReconRemoteConfigProvider, Value> {
     public init(_ providerPath: KeyPath<Recon, Provider>, _ key: Provider.Key) where Value: ConfigDecodable {
         if Value.configType != key.expectedType {
             let message = "'\(key.rawKey)' is declared as .\(key.expectedType.rawValue) but was accessed as .\(Value.configType.rawValue)"
-            Log.error(message, .named("Recon"))
+            Log.warning(message, .named("Recon"))
         }
         self.read = {
             let served = Recon.shared[keyPath: providerPath].value(for: key)
