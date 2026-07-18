@@ -6,6 +6,9 @@ import Qalam
 public protocol ReconRemoteConfigProvider {
     associatedtype Key: ReconConfigKey & CaseIterable
 
+    /// Title visible in the UI
+    var title: String { get }
+    
     func refresh() async
 
     /// The value the provider itself serves, ignoring local overrides.
@@ -14,6 +17,12 @@ public protocol ReconRemoteConfigProvider {
 
     /// Where the provider's own value comes from, ignoring local overrides.
     func providerSource(for key: Key) -> ReconConfigSource
+}
+
+extension ReconRemoteConfigProvider {
+    public var allKeys: [any ReconConfigKey] {
+        Key.allCases.map { $0 as any ReconConfigKey }
+    }
 }
 
 extension ReconRemoteConfigProvider {
