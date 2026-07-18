@@ -147,7 +147,7 @@ var output = """
 
 import Recon
 
-enum \(enumName)Key: String, ReconConfigKey, CaseIterable {
+public enum \(enumName)Key: String, ReconConfigKey, CaseIterable {
 
 """
 
@@ -157,7 +157,7 @@ for key in sortedKeys {
 
 output += """
 
-    var defaultValue: ReconConfigValue {
+    public var defaultValue: ReconConfigValue {
         switch self {
 
 """
@@ -170,7 +170,7 @@ output += """
         }
     }
 
-    var expectedType: ReconConfigValueType {
+    public var expectedType: ReconConfigValueType {
         switch self {
 
 """
