@@ -7,11 +7,29 @@ public protocol ReconRemoteConfigProvider {
     associatedtype Key: ReconConfigKey & CaseIterable
 
     func refresh() async
-    func value(for key: Key) -> ReconConfigValue
-    func source(for key: Key) -> ReconConfigSource
+
+    /// The value the provider itself serves, ignoring local overrides.
+    /// Read through ``value(for:)`` instead; it applies overrides first.
+    func providerValue(for key: Key) -> ReconConfigValue
+
+    /// Where the provider's own value comes from, ignoring local overrides.
+    func providerSource(for key: Key) -> ReconConfigSource
 }
 
 extension ReconRemoteConfigProvider {
+
+    /// Identifies this provider in Recon's override store.
+    static var overrideIdentifier: String { String(describing: Self.self) }
+
+    /// The value currently served for `key`: an active local override wins,
+    /// otherwise the provider's own value.
+    public func value(for key: Key) -> ReconConfigValue {
+        Recon.shared.overrideValue(for: key, provider: Self.self) ?? providerValue(for: key)
+    }
+
+    public func source(for key: Key) -> ReconConfigSource {
+        Recon.shared.overrideValue(for: key, provider: Self.self) != nil ? .override : providerSource(for: key)
+    }
 
     public static var defaultValues: [String: String] {
         Dictionary(uniqueKeysWithValues: Key.allCases.compactMap { key in

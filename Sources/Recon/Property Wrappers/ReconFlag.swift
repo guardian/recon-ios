@@ -1,4 +1,5 @@
 import Foundation
+import Qalam
 
 /// Selects a group of keys rather than a single one, for use with ``ReconFlag``.
 public enum KeySelection: Sendable {
@@ -12,17 +13,17 @@ public enum KeySelection: Sendable {
 ///
 /// Returns the provider's currently served value, falling back to the key's
 /// default when the served value doesn't parse as `Value`.
-///
-/// Can also list every key a provider knows about:
-///
-///     @ReconFlag(\.someCoolProvider, .all)
-///     private var allFlags: [SomeCoolProviderKey]
 @propertyWrapper
 public struct ReconFlag<Provider: ReconRemoteConfigProvider, Value> {
 
     private let read: @MainActor () -> Value
 
-    public init(_ providerPath: KeyPath<Recon, Provider> & Sendable, _ key: Provider.Key) where Value: ConfigDecodable {
+    @MainActor
+    public init(_ providerPath: KeyPath<Recon, Provider>, _ key: Provider.Key) where Value: ConfigDecodable {
+        if Value.configType != key.expectedType {
+            let message = "'\(key.rawKey)' is declared as .\(key.expectedType.rawValue) but was accessed as .\(Value.configType.rawValue)"
+            Log.error(message, .named("Recon"))
+        }
         self.read = {
             let served = Recon.shared[keyPath: providerPath].value(for: key)
             if let value = Value.from(served) {
@@ -34,14 +35,6 @@ public struct ReconFlag<Provider: ReconRemoteConfigProvider, Value> {
                 )
             }
             return fallback
-        }
-    }
-
-    public init(_ providerPath: KeyPath<Recon, Provider> & Sendable, _ selection: KeySelection) where Value == [Provider.Key] {
-        self.read = {
-            switch selection {
-            case .all: Array(Provider.Key.allCases)
-            }
         }
     }
 
