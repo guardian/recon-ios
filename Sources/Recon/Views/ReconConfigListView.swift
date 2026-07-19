@@ -7,7 +7,7 @@ public struct ReconConfigListView: View {
     @State var selectedProvider: String
     @State var searchText: String = ""
     @State private var overridesVersion: Int = 0
-
+    
     var provider: ReconRemoteConfigProvider? {
         recon.remoteConfigProviders.first(where: { $0.title == selectedProvider })
     }
@@ -24,7 +24,7 @@ public struct ReconConfigListView: View {
     public var body: some View {
         VStack {
             let keys: [any ReconConfigKey] = searchText.isEmpty ? (provider?.allKeys ?? []) : (provider?.allKeys.filter({ $0.rawKey.contains(searchText) }) ?? [])
-
+            
             List(keys, id: \.rawKey) { key in
                 RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
                     .swipeActions {
@@ -38,10 +38,10 @@ public struct ReconConfigListView: View {
                     }
             }
             .safeAreaInset(edge: .top) {
-                Color.clear.frame(height: 65)
+                Color.clear.frame(height: 50)
                     .background(.ultraThinMaterial)
                     .padding(.top, -10)
-                Picker("Subsystem", selection: $selectedProvider) {
+                Picker("Provider", selection: $selectedProvider) {
                     ForEach(Array(Set(recon.remoteConfigProviders.map { $0.title })).sorted(), id: \.self) { title in
                         Text(title).tag(title)
                     }
@@ -52,7 +52,7 @@ public struct ReconConfigListView: View {
                 .padding([.horizontal])
             }
         }
-        .searchable(text: $searchText, placement: .automatic)
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         .textInputAutocapitalization(.never)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -84,35 +84,39 @@ struct RemoteConfigListRow: View {
     var body: some View {
         Section {
             VStack(alignment: .leading, spacing: 10) {
-                Rectangle()
-                    .fill(.red)
-                    .frame(height: source == .override ? 35 : 0)
-                    .overlay {
-                        HStack {
-                            Spacer()
-                            if cancelOverride {
-                                Button {
-                                    provider?.removeOverride(for: key, in: .shared)
-                                    refresh()
-                                } label: {
-                                    sourceTag(source: .override)
-                                }
-                                .padding(.trailing)
-                            }
-                        }
-                    }
-                    
                 HStack(spacing: 5) {
                     Text(".\(caseName(for: key.rawKey))")
                         .font(.system(size: 15))
                         .bold()
                     Spacer()
-                    if source != .override {
+                    if doOverride {
+                        Button {
+                            provider?.setOverride(for: key, value: .init(text), in: .shared)
+                            isFocused = false
+                            refresh()
+                        } label: {
+                            Text("OVERRIDE")
+                                .font(.caption2)
+                                .bold()
+                                .foregroundStyle(.white)
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 6)
+                                .background {
+                                    Capsule()
+                                        .fill(.green)
+                                }
+                        }
+                    } else if source == .override {
+                        Button {
+                            provider?.removeOverride(for: key, in: .shared)
+                            refresh()
+                        } label: {
+                            sourceTag(source: source)
+                        }
+                    } else {
                         sourceTag(source: source)
                     }
                 }
-                .padding(.top, source == .override ? 0 : 5)
-                .padding(.horizontal, 15)
                 Divider()
                 HStack {
                     TextField("", text: $text, axis: .vertical)
@@ -130,24 +134,8 @@ struct RemoteConfigListRow: View {
                                 isFocused = false
                             }
                         }
-//                    if doOverride {
-                        Button {
-                            provider?.setOverride(for: key, value: .init(text), in: .shared)
-                            isFocused = false
-                            refresh()
-                        } label: {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .scaleEffect(x: 1.2, y: 1.2)
-                        }
-                        .disabled(doOverride == false)
-                        .opacity(doOverride ? 1 : 0)
-//                    }
                 }
-                .padding([.horizontal, .bottom], 15)
-
             }
-            .listRowInsets(EdgeInsets())
         }
         .onChange(of: text, { oldValue, newValue in
             guard isFocused else { return }
@@ -160,7 +148,7 @@ struct RemoteConfigListRow: View {
             refresh()
         }
     }
-
+    
     func refresh() {
         self.value = provider?.anyValue(for: key)?.stringValue ?? "?"
         self.source = provider?.anySource(for: key) ?? .local
@@ -169,22 +157,18 @@ struct RemoteConfigListRow: View {
         self.cancelOverride = source == .override
         self.doOverride = false
     }
-
+    
     @ViewBuilder
     func sourceTag(source: ReconConfigSource) -> some View {
-        Text(source == .remote ? "REMOTE" : (source == .override ? "REMOVE OVERRIDE" : "LOCAL"))
+        Text(source == .remote ? "REMOTE" : (source == .override ? " OVERRIDDEN" : "LOCAL"))
             .font(.caption2)
             .bold()
             .foregroundStyle(source == .remote ? Color.green : (source == .override ? Color.red : Color.blue))
-            .padding(.vertical, 5)
-            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
             .background {
-                if source == .override {
-                    Capsule()
-                        .fill(.background)
-                } else {
-                    Capsule().stroke(source == .remote ? Color.green : (source == .override ? Color.white : Color.blue))
-                }
+                Capsule().fill(source == .remote ? Color.green : (source == .override ? Color.red : Color.blue))
+                    .opacity(0.1)
             }
     }
     
@@ -196,24 +180,24 @@ struct RemoteConfigListRow: View {
 }
 
 fileprivate struct PreviewConfigProvider: ReconRemoteConfigProvider {
-
+    
     enum Key: String, CaseIterable, ReconConfigKey {
         case remote_key
         case local_key
         case override_key
-
+        
         var defaultValue: ReconConfigValue { "Hello, world!" }
         var expectedType: ReconConfigValueType { .string }
     }
-
+    
     let title = "Preview"
-
+    
     func refresh() async {}
-
+    
     func providerValue(for key: Key) -> ReconConfigValue {
         key.defaultValue
     }
-
+    
     func providerSource(for key: Key) -> ReconConfigSource {
         switch key {
         case .local_key: return .local
