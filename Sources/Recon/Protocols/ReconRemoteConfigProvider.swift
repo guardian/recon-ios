@@ -36,6 +36,11 @@ extension ReconRemoteConfigProvider {
         Recon.shared.overrideValue(for: key, provider: Self.self) ?? providerValue(for: key)
     }
 
+    public func anyValue(for key: any ReconConfigKey) -> ReconConfigValue? {
+        guard let typedKey = key as? Key else { return nil }
+        return value(for: typedKey) // now unambiguously calls the Key-typed method
+    }
+    
     public func source(for key: Key) -> ReconConfigSource {
         Recon.shared.overrideValue(for: key, provider: Self.self) != nil ? .override : providerSource(for: key)
     }
