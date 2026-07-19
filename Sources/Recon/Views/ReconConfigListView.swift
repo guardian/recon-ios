@@ -73,7 +73,6 @@ struct RemoteConfigListRow: View {
     @State private var source: ReconConfigSource = .local
     @State private var text: String = ""
     @FocusState private var isFocused: Bool
-    @State private var readyToOverride: Bool = false
     @State private var cancelOverride: Bool = false
     @State private var doOverride: Bool = false
     
@@ -142,8 +141,8 @@ struct RemoteConfigListRow: View {
         self.value = provider?.anyValue(for: key)?.stringValue ?? "?"
         self.source = provider?.anySource(for: key) ?? .local
         self.text = value
-        self.readyToOverride = true
         self.cancelOverride = source == .override
+        self.doOverride = false
     }
 
     @ViewBuilder
