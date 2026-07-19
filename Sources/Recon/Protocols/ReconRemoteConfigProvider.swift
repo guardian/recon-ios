@@ -26,6 +26,29 @@ extension ReconRemoteConfigProvider {
 }
 
 extension ReconRemoteConfigProvider {
+    
+    /// Callable on `any ReconRemoteConfigProvider`. Downcasts `key`, then
+    /// dispatches to the concrete, generic `addOverride`.
+    public func setOverride(for key: any ReconConfigKey, value: ReconConfigValue, in recon: Recon) {
+        guard let typedKey = key as? Key else {
+            Log.error("key type mismatch on provider \(title)", .named("Recon"))
+            return
+        }
+        recon.addOverride(provider: self, key: typedKey, value: value)
+    }
+    
+    /// Callable on `any ReconRemoteConfigProvider`. Downcasts `key`, then
+    /// dispatches to the concrete, generic `removeOverride`.
+    public func removeOverride(for key: any ReconConfigKey, in recon: Recon) {
+        guard let typedKey = key as? Key else {
+            Log.error("key type mismatch on provider \(title)", .named("Recon"))
+            return
+        }
+        recon.removeOverride(provider: self, key: typedKey)
+    }
+}
+
+extension ReconRemoteConfigProvider {
 
     /// Identifies this provider in Recon's override store.
     static var overrideIdentifier: String { String(describing: Self.self) }
@@ -43,6 +66,11 @@ extension ReconRemoteConfigProvider {
     
     public func source(for key: Key) -> ReconConfigSource {
         Recon.shared.overrideValue(for: key, provider: Self.self) != nil ? .override : providerSource(for: key)
+    }
+
+    public func anySource(for key: any ReconConfigKey) -> ReconConfigSource? {
+        guard let typedKey = key as? Key else { return nil }
+        return source(for: typedKey) // calls the existing Key-typed method
     }
 
     public static var defaultValues: [String: String] {

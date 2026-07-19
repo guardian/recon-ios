@@ -18,7 +18,24 @@ extension Recon {
         persistOverrides()
     }
 
+    public func addOverride<P: ReconRemoteConfigProvider>(provider: P, key: P.Key, value: ReconConfigValue) {
+            guard let raw = value.stringValue else {
+//                removeOverride(provider: provider, key: key) // give this the same treatment
+                return
+            }
+            if !value.matches(key.expectedType) {
+                Log.error("override for '\(key.rawKey)' does not parse as .\(key.expectedType.rawValue)", .named("Recon"))
+            }
+            overrides[P.overrideIdentifier, default: [:]][key.rawKey] = raw
+            persistOverrides()
+        }
+    
     public func removeOverride<P: ReconRemoteConfigProvider>(_ providerPath: KeyPath<Recon, P>, _ key: P.Key) {
+        overrides[P.overrideIdentifier]?[key.rawKey] = nil
+        persistOverrides()
+    }
+
+    public func removeOverride<P: ReconRemoteConfigProvider>(provider: P, key: P.Key) {
         overrides[P.overrideIdentifier]?[key.rawKey] = nil
         persistOverrides()
     }
