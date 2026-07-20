@@ -21,9 +21,23 @@ public struct ReconConfigListView: View {
         }
     }
     
+    func sortedKeys(matching searchText: String) -> [any ReconConfigKey] {
+        let filtered: [any ReconConfigKey] = searchText.isEmpty ? (provider?.allKeys ?? []) : (provider?.allKeys.filter({ $0.rawKey.contains(searchText) }) ?? [])
+        
+        // Prefer overriden flags to appear at the top, and then sort by Alphabetical order.
+        return filtered.sorted { lhs, rhs in
+            let lhsOverridden = provider?.anySource(for: lhs) == .override
+            let rhsOverridden = provider?.anySource(for: rhs) == .override
+            if lhsOverridden != rhsOverridden {
+                return lhsOverridden
+            }
+            return lhs.rawKey < rhs.rawKey
+        }
+    }
+    
     public var body: some View {
         VStack {
-            let keys: [any ReconConfigKey] = searchText.isEmpty ? (provider?.allKeys ?? []) : (provider?.allKeys.filter({ $0.rawKey.contains(searchText) }) ?? [])
+            let keys: [any ReconConfigKey] = sortedKeys(matching: searchText)
             
             List(keys, id: \.rawKey) { key in
                 RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
@@ -77,7 +91,6 @@ struct RemoteConfigListRow: View {
     @State private var source: ReconConfigSource = .local
     @State private var text: String = ""
     @FocusState private var isFocused: Bool
-    @State private var readyToOverride: Bool = false
     @State private var cancelOverride: Bool = false
     @State private var doOverride: Bool = true
     
@@ -106,13 +119,6 @@ struct RemoteConfigListRow: View {
                                         .fill(.green)
                                 }
                         }
-                    } else if source == .override {
-                        Button {
-                            provider?.removeOverride(for: key, in: .shared)
-                            refresh()
-                        } label: {
-                            sourceTag(source: source)
-                        }
                     } else {
                         sourceTag(source: source)
                     }
@@ -138,7 +144,7 @@ struct RemoteConfigListRow: View {
             }
         }
         .onChange(of: text, { oldValue, newValue in
-            guard isFocused else { return }
+            guard newValue != value else { doOverride = false; return }
             doOverride = true
         })
         .onChange(of: refreshTrigger) { _, _ in
@@ -153,7 +159,6 @@ struct RemoteConfigListRow: View {
         self.value = provider?.anyValue(for: key)?.stringValue ?? "?"
         self.source = provider?.anySource(for: key) ?? .local
         self.text = value
-        self.readyToOverride = true
         self.cancelOverride = source == .override
         self.doOverride = false
     }
