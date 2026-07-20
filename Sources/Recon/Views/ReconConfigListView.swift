@@ -29,10 +29,10 @@ public struct ReconConfigListView: View {
                 RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
                     .swipeActions {
                         Button {
-                            provider?.setOverride(for: key, value: .init("overrideee"), in: recon)
+                            provider?.removeOverride(for: key, in: .shared)
                             overridesVersion += 1
                         } label: {
-                            Image(systemName: "plus.square.fill")
+                            Label("Remove\nOverride", systemImage: "xmark")
                         }
                         .tint(.red)
                     }
@@ -60,9 +60,9 @@ public struct ReconConfigListView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .onChange(of: searchText) { oldValue, newValue in
             let keys: [any ReconConfigKey] = searchText.isEmpty ? (provider?.allKeys ?? []) : (provider?.allKeys.filter({ $0.rawKey.contains(searchText) }) ?? [])
-            print(keys)
         }
     }
 }
