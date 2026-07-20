@@ -108,7 +108,7 @@ struct RemoteConfigListRow: View {
                             isFocused = false
                             refresh()
                         } label: {
-                            Text("OVERRIDE")
+                            Text("OVERRIDE ?")
                                 .font(.caption2)
                                 .bold()
                                 .foregroundStyle(.white)
@@ -116,7 +116,7 @@ struct RemoteConfigListRow: View {
                                 .padding(.horizontal, 6)
                                 .background {
                                     Capsule()
-                                        .fill(.green)
+                                        .fill(.orange)
                                 }
                         }
                     } else {
