@@ -1,4 +1,5 @@
-# 🔭 Recon
+# <img height="70" alt="Group 2 (5)" src="https://github.com/user-attachments/assets/122e62d3-0c66-4470-b588-ed2b819a5902" />
+
  
 **Type-safe remote config & feature flags for iOS, with a built-in debug UI for overriding values on-device.**
  
@@ -226,5 +227,7 @@ Flags can also carry an expiry, which surfaces as an Xcode build warning once pa
 ```
 
  ------
+ 
  Thank you for using Recon!
+ 
  iOS Team, The Guardian
