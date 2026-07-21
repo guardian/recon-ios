@@ -7,8 +7,9 @@ public struct ReconConfigListView: View {
     @State var selectedProvider: String
     @State var searchText: String = ""
     @State private var overridesVersion: Int = 0
+    @State private var displayedKeys: [any ReconConfigKey] = []
     
-    var provider: ReconRemoteConfigProvider? {
+    var provider: (any ReconRemoteConfigProvider)? {
         recon.remoteConfigProviders.first(where: { $0.title == selectedProvider })
     }
     
@@ -34,16 +35,19 @@ public struct ReconConfigListView: View {
             return lhs.rawKey < rhs.rawKey
         }
     }
+
+    func refreshOrder() {
+        displayedKeys = sortedKeys(matching: searchText)
+    }
     
     public var body: some View {
         VStack {
-            let keys: [any ReconConfigKey] = sortedKeys(matching: searchText)
             List {
                 Label("Tap to edit values. Swipe to remove overrides.", systemImage: "info.circle")
                     .font(.caption)
                     .foregroundStyle(.gray)
                     .listRowBackground(EmptyView())
-                ForEach(keys, id: \.rawKey) { key in
+                ForEach(displayedKeys, id: \.rawKey) { key in
                     RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
                         .swipeActions {
                             Button {
@@ -83,8 +87,14 @@ public struct ReconConfigListView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .onChange(of: searchText) { oldValue, newValue in
-            let keys: [any ReconConfigKey] = searchText.isEmpty ? (provider?.allKeys ?? []) : (provider?.allKeys.filter({ $0.rawKey.contains(searchText) }) ?? [])
+        .onAppear {
+            refreshOrder()
+        }
+        .onChange(of: searchText) { _, _ in
+            refreshOrder()
+        }
+        .onChange(of: selectedProvider) { _, _ in
+            refreshOrder()
         }
     }
 }
