@@ -38,19 +38,27 @@ public struct ReconConfigListView: View {
     public var body: some View {
         VStack {
             let keys: [any ReconConfigKey] = sortedKeys(matching: searchText)
-            
-            List(keys, id: \.rawKey) { key in
-                RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
-                    .swipeActions {
-                        Button {
-                            provider?.removeOverride(for: key, in: .shared)
-                            overridesVersion += 1
-                        } label: {
-                            Label("Remove\nOverride", systemImage: "xmark")
+            List {
+                Label("Tap to edit values. Swipe to remove overrides.", systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.gray)
+                    .listRowBackground(EmptyView())
+                ForEach(keys, id: \.rawKey) { key in
+                    RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
+                        .swipeActions {
+                            Button {
+                                provider?.removeOverride(for: key, in: .shared)
+                                overridesVersion += 1
+                            } label: {
+                                Label("Remove\nOverride", systemImage: "xmark")
+                            }
+                            .tint(.red)
                         }
-                        .tint(.red)
-                    }
+                }
             }
+            .listSectionSpacing(10)
+            .listSectionSpacing(.compact)
+            .contentMargins(.top, 0, for: .scrollContent)
             .safeAreaInset(edge: .top) {
                 Color.clear.frame(height: 50)
                     .background(.ultraThinMaterial)
@@ -165,15 +173,15 @@ struct RemoteConfigListRow: View {
     
     @ViewBuilder
     func sourceTag(source: ReconConfigSource) -> some View {
-        Text(source == .remote ? "REMOTE" : (source == .override ? " OVERRIDDEN" : "LOCAL"))
+        Text(source == .remote ? "R" : (source == .override ? "OVERRIDDE" : "L"))
             .font(.caption2)
             .bold()
-            .foregroundStyle(source == .remote ? Color.green : (source == .override ? Color.red : Color.blue))
+            .foregroundStyle(source == .remote ? Color.green : (source == .override ? Color.white : Color.blue))
             .padding(.vertical, 4)
             .padding(.horizontal, 6)
             .background {
                 Capsule().fill(source == .remote ? Color.green : (source == .override ? Color.red : Color.blue))
-                    .opacity(0.1)
+                    .opacity(source == .override ? 1.0 : 0.15)
             }
     }
     
