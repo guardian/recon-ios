@@ -191,7 +191,7 @@ struct RemoteConfigListRow: View {
     
     @ViewBuilder
     func sourceTag(source: ReconConfigSource) -> some View {
-        Text(source == .remote ? "R" : (source == .override ? "OVERRIDDE" : "L"))
+        Text(source == .remote ? "REMOTE" : (source == .override ? "OVERRIDDE" : "LOCAL"))
             .font(.caption2)
             .bold()
             .foregroundStyle(source == .remote ? Color.green : (source == .override ? Color.white : Color.blue))
@@ -199,7 +199,7 @@ struct RemoteConfigListRow: View {
             .padding(.horizontal, 6)
             .background {
                 Capsule().fill(source == .remote ? Color.green : (source == .override ? Color.red : Color.blue))
-                    .opacity(source == .override ? 1.0 : 0.15)
+                    .opacity(source == .override ? 1.0 : 0.1)
             }
     }
     
