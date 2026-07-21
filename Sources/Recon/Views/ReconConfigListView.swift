@@ -9,12 +9,15 @@ public struct ReconConfigListView: View {
     @State private var overridesVersion: Int = 0
     @State private var displayedKeys: [any ReconConfigKey] = []
     
+    let authorised: Bool
+    
     var provider: (any ReconRemoteConfigProvider)? {
         recon.remoteConfigProviders.first(where: { $0.title == selectedProvider })
     }
     
-    public init(recon: Recon = .shared) {
+    public init(recon: Recon = .shared, authorised: Bool = true) {
         self.recon = recon
+        self.authorised = authorised
         if let firstProvider = recon.remoteConfigProviders.first {
             self.selectedProvider = firstProvider.title
         } else {
@@ -43,20 +46,25 @@ public struct ReconConfigListView: View {
     public var body: some View {
         VStack {
             List {
-                Label("Tap to edit values. Swipe to remove overrides.", systemImage: "info.circle")
+                Text("\(authorised ? "Tap to edit values. Swipe to remove overrides." : "You do not have permissions to manually override values.")")
                     .font(.caption)
                     .foregroundStyle(.gray)
                     .listRowBackground(EmptyView())
                 ForEach(displayedKeys, id: \.rawKey) { key in
                     RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
+                        .disabled(authorised == false)
                         .swipeActions {
-                            Button {
-                                provider?.removeOverride(for: key, in: .shared)
-                                overridesVersion += 1
-                            } label: {
-                                Label("Remove\nOverride", systemImage: "xmark")
+                            if authorised && provider?.anySource(for: key) == .override {
+                                Button {
+                                    provider?.removeOverride(for: key, in: .shared)
+                                    overridesVersion += 1
+                                } label: {
+                                    Label("Remove\nOverride", systemImage: "xmark")
+                                }
+                                .tint(.red)
+                            } else {
+                                EmptyView()
                             }
-                            .tint(.red)
                         }
                 }
             }
