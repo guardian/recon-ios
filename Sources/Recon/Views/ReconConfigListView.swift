@@ -154,7 +154,7 @@ struct RemoteConfigListRow: View {
                     TextField("", text: $text, axis: .vertical)
                         .lineLimit(1...4)
                         .monospaced()
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(source == .override ? .red : .gray)
                         .focused($isFocused)
                         .submitLabel(.done)
                         .autocorrectionDisabled()
