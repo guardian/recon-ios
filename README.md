@@ -226,6 +226,81 @@ Flags can also carry an expiry, which surfaces as an Xcode build warning once pa
 </dict>
 ```
 
+## Local overrides & the debug UI
+
+An override wins over whatever the provider would otherwise serve, and is persisted in `UserDefaults` until removed — `source(for:)` reports `.override` while one is active.
+
+```swift
+// Set, read, and remove an override by key path.
+Recon.shared.addOverride(\.firebase, .isCheckoutV2Enabled, true)
+Recon.shared.overrideValue(\.firebase, .isCheckoutV2Enabled) // -> ReconConfigValue?
+Recon.shared.removeOverride(\.firebase, .isCheckoutV2Enabled)
+
+// Clear every override for a provider.
+Recon.shared.clearOverrides(\.firebase)
+```
+
+`ReconConfigListView` is a ready-made SwiftUI screen that lists every key across all registered providers, with a segmented picker to switch providers and a search field to filter keys. Drop it behind a debug menu:
+
+```swift
+NavigationStack {
+    ReconConfigListView()
+}
+```
+
+Tapping a row's value field and pressing the orange button sets an override; swiping a row that's currently overridden removes it. Each row shows a badge for where its value currently comes from (`REMOTE`, `LOCAL`, or `OVERRIDDEN`). Pass `authorised: false` to render the screen read-only, e.g. for builds where only some users should be able to change flags:
+
+```swift
+ReconConfigListView(authorised: isDebugMenuUnlocked)
+```
+
+## Validating config at startup
+
+Since a provider's raw value is just a string, it's possible for a backend to serve something that doesn't parse as a key's `expectedType` (e.g. `"3"` when `maxRetryCount` expects `.int` is fine, but `"abc"` isn't). Validate a single key or every key for a provider, and handle the aggregated `ConfigTypeMismatchError`:
+
+```swift
+do {
+    try Recon.shared.firebase.validateAll()
+} catch let error as ConfigTypeMismatchError {
+    // error.mismatches: [(key, expected type, raw value)]
+    Log.error(error.description, .named("Startup"))
+}
+```
+
+Calling `validateAll()` once after your provider's first `refresh()` — e.g. right after `addRemoteConfigProvider` — catches a misconfigured backend value before any call site trips over it.
+
+## Testing
+
+Run the package's tests with:
+
+```sh
+swift test
+```
+
+The `ReconTests` target is the place to add coverage as you build out custom providers and keys — it ships as an empty starting point.
+
+## Project layout
+
+```
+Sources/
+  Recon/
+    Enums/                 ReconConfigSource, ReconConfigValueType
+    Errors/                ConfigTypeMismatchError
+    Extensions/            ConfigDecodable, Recon+Accessors (keypath-based typed reads), Recon+Overrides
+    Property Wrappers/     ReconFlag
+    Protocols/             ReconConfigKey, ReconRemoteConfigProvider
+    Structs/               ReconConfigValue
+    Views/                 ReconConfigListView (debug UI)
+    Recon.swift            The Recon.shared singleton
+  recon-keygen/
+    main.swift             The plist -> Swift enum code-gen CLI
+Plugins/
+  ReconKeygenPlugin/
+    Plugin.swift           SPM build tool plugin that runs recon-keygen on every *.rcf.plist
+Tests/
+  ReconTests/
+```
+
  ------
  
  Thank you for using Recon!
