@@ -12,7 +12,7 @@ extension Recon {
             return
         }
         if !value.matches(key.expectedType) {
-            Qalam.Log.error("override for '\(key.rawKey)' does not parse as .\(key.expectedType.rawValue)", .named("Recon"))
+            Qalam.Log.error("override for '\(key.rawKey)' does not parse as .\(key.expectedType.rawValue)", LogSubsystem.named("Recon"))
         }
         overrides[P.overrideIdentifier, default: [:]][key.rawKey] = raw
         persistOverrides()
@@ -23,7 +23,7 @@ extension Recon {
                 return
             }
             if !value.matches(key.expectedType) {
-                Qalam.Log.error("override for '\(key.rawKey)' does not parse as .\(key.expectedType.rawValue)", .named("Recon"))
+                Qalam.Log.error("override for '\(key.rawKey)' does not parse as .\(key.expectedType.rawValue)", LogSubsystem.named("Recon"))
             }
             overrides[P.overrideIdentifier, default: [:]][key.rawKey] = raw
             persistOverrides()

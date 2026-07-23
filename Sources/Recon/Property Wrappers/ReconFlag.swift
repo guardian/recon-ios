@@ -17,7 +17,7 @@ public struct ReconFlag<Provider: ReconRemoteConfigProvider, Value> {
     public init(_ providerPath: KeyPath<Recon, Provider>, _ key: Provider.Key) where Value: ConfigDecodable {
         if Value.configType != key.expectedType {
             let message = "'\(key.rawKey)' is declared as .\(key.expectedType.rawValue) but was accessed as .\(Value.configType.rawValue)"
-            Qalam.Log.warning(message, .named("Recon"))
+            Qalam.Log.warning(message, LogSubsystem.named("Recon"))
         }
         self.read = {
             let served = Recon.shared[keyPath: providerPath].value(for: key)

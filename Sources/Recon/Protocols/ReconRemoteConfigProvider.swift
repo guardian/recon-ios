@@ -31,7 +31,7 @@ extension ReconRemoteConfigProvider {
     /// dispatches to the concrete, generic `addOverride`.
     public func setOverride(for key: any ReconConfigKey, value: ReconConfigValue, in recon: Recon) {
         guard let typedKey = key as? Key else {
-            Qalam.Log.error("key type mismatch on provider \(title)", .named("Recon"))
+            Qalam.Log.error("key type mismatch on provider \(title)", LogSubsystem.named("Recon"))
             return
         }
         recon.addOverride(provider: self, key: typedKey, value: value)
@@ -41,7 +41,7 @@ extension ReconRemoteConfigProvider {
     /// dispatches to the concrete, generic `removeOverride`.
     public func removeOverride(for key: any ReconConfigKey, in recon: Recon) {
         guard let typedKey = key as? Key else {
-            Qalam.Log.error("key type mismatch on provider \(title)", .named("Recon"))
+            Qalam.Log.error("key type mismatch on provider \(title)", LogSubsystem.named("Recon"))
             return
         }
         recon.removeOverride(provider: self, key: typedKey)
@@ -114,7 +114,7 @@ extension ReconRemoteConfigProvider {
     private func checkedValue(for key: Key, accessedAs type: ReconConfigValueType) -> ReconConfigValue {
         if key.expectedType != type {
             let message = "'\(key.rawKey)' is declared as .\(key.expectedType.rawValue) but was accessed as .\(type.rawValue)"
-            Qalam.Log.error(message, .named("Recon"))
+            Qalam.Log.error(message, LogSubsystem.named("Recon"))
         }
         return value(for: key)
     }
