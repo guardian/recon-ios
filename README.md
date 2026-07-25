@@ -13,8 +13,6 @@ Recon sits between your app and whatever remote config backend you use (Firebase
 - **compile-time-safe keys**, generated from a plist so the plist is always the source of truth
 - **on-device local overrides** that persist across launches, for QA and debugging
 - a drop-in **SwiftUI debug screen** to browse, search, and override every flag
-- type mismatch detection between what a key declares and how it's actually used
-Recon does not talk to any network itself — it defines the contract (`ReconRemoteConfigProvider`) that your Firebase/whatever integration implements, and handles storage, overrides, typing, and UI on top.
  
 ---
  
