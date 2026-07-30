@@ -46,10 +46,15 @@ public struct ReconConfigListView: View {
     public var body: some View {
         VStack {
             List {
-                Text("\(authorised ? "Tap to edit values. Swipe to remove overrides." : "You do not have permissions to manually override values.")")
-                    .font(.caption)
-                    .foregroundStyle(.gray)
-                    .listRowBackground(EmptyView())
+                HStack {
+                    Spacer()
+                    Text("\(authorised ? "Tap to edit values. Swipe to remove overrides.".uppercased() : "You do not have permissions to manually override values.".uppercased())")
+                        .font(.caption2)
+                        .foregroundStyle(.gray)
+                    Spacer()
+                }
+                .frame(height: 20)
+                .listRowBackground(EmptyView())
                 ForEach(displayedKeys, id: \.rawKey) { key in
                     RemoteConfigListRow(key: key, provider: provider, refreshTrigger: overridesVersion)
                         .disabled(authorised == false)
@@ -70,6 +75,7 @@ public struct ReconConfigListView: View {
             }
             .listSectionSpacing(10)
             .listSectionSpacing(.compact)
+            .listSectionIndexVisibilityIfAvailable(.visible)
             .contentMargins(.top, 0, for: .scrollContent)
             .safeAreaInset(edge: .top) {
                 Color.clear.frame(height: 50)
@@ -152,7 +158,7 @@ struct RemoteConfigListRow: View {
                 Divider()
                 HStack {
                     TextField("", text: $text, axis: .vertical)
-                        .lineLimit(1...4)
+                        .lineLimit(1...5)
                         .monospaced()
                         .foregroundStyle(source == .override ? .red : .gray)
                         .focused($isFocused)
@@ -169,6 +175,7 @@ struct RemoteConfigListRow: View {
                 }
             }
         }
+        .sectionIndexLabelIfAvailable("\(key.rawKey.first?.uppercased(), default: "")")
         .onChange(of: text, { oldValue, newValue in
             guard newValue != value else { doOverride = false; return }
             doOverride = true
