@@ -55,6 +55,53 @@ extension Recon {
         overrides[P.overrideIdentifier]?[key.rawKey].map(ReconConfigValue.init)
     }
 
+    /// Serializes every active override to a single string, suitable for
+    /// sharing or persisting elsewhere. Each override is one line of
+    /// provider|key|value, where every field is Base64-encoded so its raw
+    /// content can never collide with the delimiters. Feed the result back to
+    /// ``setOverrides(from:)`` to restore the same overrides.
+    public func getOverrides() -> String {
+        overrides
+            .sorted { $0.key < $1.key }
+            .flatMap { provider, keyValues in
+                keyValues.sorted { $0.key < $1.key }.map { key, value in
+                    [provider, key, value].map(Self.encodeField).joined(separator: "|")
+                }
+            }
+            .joined(separator: "\n")
+    }
+
+    /// Applies overrides from a string produced by ``getOverrides()``,
+    /// replacing any currently active overrides. Throws
+    /// ``OverridesParseError`` if the string could not be parsed, in which
+    /// case the current overrides are left unchanged.
+    public func setOverrides(from string: String) throws {
+        var decoded: [String: [String: String]] = [:]
+        let lines = string.split(separator: "\n", omittingEmptySubsequences: true)
+        for line in lines {
+            let fields = line.split(separator: "|", omittingEmptySubsequences: false)
+            guard fields.count == 3,
+                  let provider = Self.decodeField(String(fields[0])),
+                  let key = Self.decodeField(String(fields[1])),
+                  let value = Self.decodeField(String(fields[2])) else {
+                let error = OverridesParseError(line: String(line))
+                Qalam.Log.console(error.description, .error, .named(system: "Recon"))
+                throw error
+            }
+            decoded[provider, default: [:]][key] = value
+        }
+        overrides = decoded
+        persistOverrides()
+    }
+
+    private static func encodeField(_ field: String) -> String {
+        Data(field.utf8).base64EncodedString()
+    }
+
+    private static func decodeField(_ field: String) -> String? {
+        Data(base64Encoded: field).flatMap { String(data: $0, encoding: .utf8) }
+    }
+
     private func persistOverrides() {
         UserDefaults.standard.set(overrides, forKey: Self.overridesDefaultsKey)
     }
