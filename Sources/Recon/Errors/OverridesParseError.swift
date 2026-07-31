@@ -4,16 +4,17 @@ import Foundation
 /// be parsed and applied.
 public struct OverridesParseError: Error, CustomStringConvertible, Sendable {
 
-    /// The line that could not be parsed, if the failure is line-specific.
-    public let line: String?
+    /// The provider|key|value entry that could not be parsed, if the failure
+    /// is entry-specific.
+    public let entry: String?
 
-    public init(line: String? = nil) {
-        self.line = line
+    public init(entry: String? = nil) {
+        self.entry = entry
     }
 
     public var description: String {
-        if let line {
-            return "could not parse overrides line '\(line)'"
+        if let entry {
+            return "could not parse overrides entry '\(entry)'"
         }
         return "could not parse overrides string"
     }
