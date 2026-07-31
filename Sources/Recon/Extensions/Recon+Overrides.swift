@@ -65,10 +65,10 @@ extension Recon {
             .sorted { $0.key < $1.key }
             .flatMap { provider, keyValues in
                 keyValues.sorted { $0.key < $1.key }.map { key, value in
-                    [provider, key, value].map(Self.encodeField).joined(separator: "|")
+                    [provider, key, value].joined(separator: "$")
                 }
             }
-            .joined(separator: "\n")
+            .joined(separator: "&")
     }
 
     /// Applies overrides from a string produced by ``getOverrides()``,
@@ -77,29 +77,21 @@ extension Recon {
     /// case the current overrides are left unchanged.
     public func setOverrides(from string: String) throws {
         var decoded: [String: [String: String]] = [:]
-        let lines = string.split(separator: "\n", omittingEmptySubsequences: true)
+        let lines = string.split(separator: "&", omittingEmptySubsequences: true)
         for line in lines {
-            let fields = line.split(separator: "|", omittingEmptySubsequences: false)
-            guard fields.count == 3,
-                  let provider = Self.decodeField(String(fields[0])),
-                  let key = Self.decodeField(String(fields[1])),
-                  let value = Self.decodeField(String(fields[2])) else {
+            let fields = line.split(separator: "$", omittingEmptySubsequences: false)
+            guard fields.count == 3 else {
                 let error = OverridesParseError(line: String(line))
                 Qalam.Log.console(error.description, .error, .named(system: "Recon"))
                 throw error
             }
+            let provider = String(fields[0])
+            let key = String(fields[1])
+            let value = String(fields[2])
             decoded[provider, default: [:]][key] = value
         }
         overrides = decoded
         persistOverrides()
-    }
-
-    private static func encodeField(_ field: String) -> String {
-        Data(field.utf8).base64EncodedString()
-    }
-
-    private static func decodeField(_ field: String) -> String? {
-        Data(base64Encoded: field).flatMap { String(data: $0, encoding: .utf8) }
     }
 
     private func persistOverrides() {
