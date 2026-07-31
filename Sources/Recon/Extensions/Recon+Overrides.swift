@@ -56,9 +56,7 @@ extension Recon {
     }
 
     /// Serializes every active override to a single string, suitable for
-    /// sharing or persisting elsewhere. Each override is one line of
-    /// provider|key|value, where every field is Base64-encoded so its raw
-    /// content can never collide with the delimiters. Feed the result back to
+    /// sharing or persisting elsewhere. Feed the result back to
     /// ``setOverrides(from:)`` to restore the same overrides.
     public func getOverrides() -> String {
         overrides
@@ -92,6 +90,7 @@ extension Recon {
         }
         overrides = decoded
         persistOverrides()
+        Qalam.Log.console("Overrides applied: \(overrides)", .info, .named(system: "Recon"))
     }
 
     private func persistOverrides() {

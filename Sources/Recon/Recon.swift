@@ -2,6 +2,7 @@ import Foundation
 import Qalam
 
 @MainActor
+@Observable
 public final class Recon {
 
     public static let shared: Recon = .init()
