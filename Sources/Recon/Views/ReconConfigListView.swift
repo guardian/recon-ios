@@ -82,6 +82,11 @@ public struct ReconConfigListView: View {
                 .frame(height: 20)
                 .listRowBackground(EmptyView())
             }
+            .refreshable {
+                await provider?.refresh()
+                overridesVersion += 1
+                refreshOrder()
+            }
             .listSectionSpacing(10)
             .listSectionSpacing(.compact)
             .listSectionIndexVisibilityIfAvailable(.visible)
