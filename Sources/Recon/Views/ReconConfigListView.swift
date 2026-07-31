@@ -49,7 +49,7 @@ public struct ReconConfigListView: View {
                 HStack {
                     Spacer()
                     Text("\(authorised ? "Tap to edit values. Swipe to remove overrides.".uppercased() : "You do not have permissions to manually override values.".uppercased())")
-                        .font(.caption2)
+                        .font(.system(size: 9))
                         .foregroundStyle(.gray)
                     Spacer()
                 }
@@ -72,10 +72,20 @@ public struct ReconConfigListView: View {
                             }
                         }
                 }
+                HStack {
+                    Spacer()
+                    Text("Recon - Remote Config List")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.gray.opacity(0.5))
+                    Spacer()
+                }
+                .frame(height: 20)
+                .listRowBackground(EmptyView())
             }
             .listSectionSpacing(10)
             .listSectionSpacing(.compact)
             .listSectionIndexVisibilityIfAvailable(.visible)
+            .tint(.gray)
             .contentMargins(.top, 0, for: .scrollContent)
             .safeAreaInset(edge: .top) {
                 Color.clear.frame(height: 50)
@@ -94,11 +104,6 @@ public struct ReconConfigListView: View {
         }
         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         .textInputAutocapitalization(.never)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Remote Config").bold()
-            }
-        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .onAppear {
