@@ -143,6 +143,9 @@ struct RemoteConfigListRow: View {
                     Text(".\(caseName(for: key.rawKey))")
                         .font(.system(size: 15))
                         .bold()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .truncationMode(.tail)
                     Spacer()
                     if doOverride {
                         Button {
