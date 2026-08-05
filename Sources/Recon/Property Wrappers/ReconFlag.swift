@@ -45,14 +45,7 @@ public struct ReconFlag<Provider: ReconRemoteConfigProvider, Value: ConfigDecoda
 
     @MainActor
     public var wrappedValue: Value {
-        let served: ReconConfigValue
-        if let providerPath {
-            served = Recon.shared[keyPath: providerPath].value(for: key)
-        } else if let provider = Recon.shared.provider(Provider.self) {
-            served = provider.value(for: key)
-        } else {
-            served = key.defaultValue
-        }
+        let served = Recon.shared.provider(Provider.self)?.value(for: key) ?? key.defaultValue
 
         if let value = Value.from(served) {
             return value
