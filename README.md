@@ -173,7 +173,16 @@ extension Recon {
 
 ### 4. Read values
 
-Three ways to read a flag — pick whichever fits the call site:
+There are four ways to read a flag. Pick by call site:
+
+| Call site | Use |
+| --- | --- |
+| A SwiftUI view or any stored property | `@ReconFlag` |
+| A one-off read that should never fail | `Recon.value(_:_:)` |
+| You need to know the value was missing | `intValue`, `stringValue`, … |
+| You already have the provider in hand | `provider.stringValue(for:)` |
+
+Code example:
 
 ```swift
 // Property wrapper — reads live, no boilerplate at the call site.
@@ -185,24 +194,64 @@ struct CheckoutView: View {
     }
 }
 
-// Key-path accessor on the shared instance.
-let retries = Recon.shared.intValue(\.firebase, .maxRetryCount) ?? 3
+// Non-optional typed read — falls back to the key's own default,
+// so there's no `?? default` to write.
+let isV2Enabled: Bool = Recon.value(\.firebase, .isCheckoutV2Enabled)
+let retries: Int = Recon.shared.value(\.firebase, .maxRetryCount)
+
+// Optional typed accessor — nil when the served value is absent or
+// doesn't parse, so you supply the fallback yourself.
+let maybeRetries = Recon.shared.intValue(\.firebase, .maxRetryCount) ?? 3
 
 // Directly on the provider.
 let copy = Recon.shared.firebase.stringValue(for: .welcomeBannerCopy)
 ```
 
+``Recon/value(_:_:)`` and its instance form ``Recon/shared`` parse the served
+value as the annotated type, falling back to the key's declared
+``ReconKey/defaultValue`` whenever the provider isn't registered or the value
+doesn't parse. That's what makes the result non-optional and crash-safe.
+
+The type annotation is required, because the result type is what selects `Bool`
+over `Int`:
+
+```swift
+let x: Bool = Recon.value(\.firebase, .isCheckoutV2Enabled)  // ✅
+let x = Recon.value(\.firebase, .isCheckoutV2Enabled)        // ❌ won't compile
+```
+
 > [!IMPORTANT]
-> The key-path form `@ReconFlag(\.firebase, …)` is `@MainActor` — forming a key path to a main-actor-isolated provider accessor is only legal from the main actor. To read a flag from inside an actor or any non-main-actor context, use the provider-type form, which is `nonisolated` and resolves the provider by type when the value is read:
+> **The key-path form is main-actor-only.** `\.firebase` is a key path to a
+> main-actor-isolated provider accessor, and forming one is only legal from the
+> main actor. Reads go through ``Recon`` on the main actor anyway (the class is
+> `@MainActor`), so on the main actor the key path is the ergonomic choice.
+>
+> From inside an actor or any other non-main-actor context, pass the provider
+> **type** instead. That skips the key path, and you `await` the hop:
 >
 > ```swift
+> // The type-based init is nonisolated, so the wrapper can be declared anywhere.
 > @ReconFlag(FirebaseConfigProvider.self, .isCheckoutV2Enabled)
 > private var isV2Enabled: Bool
+>
+> let isV2Enabled: Bool = await Recon.value(
+>     FirebaseConfigProvider.self,
+>     .isCheckoutV2Enabled
+> )
 > ```
 
-Typed accessors (`stringValue`, `intValue`, `doubleValue`, `boolValue`, `dateValue`, `jsonValue`, `decodedValue(_:)`) log a warning when you read a key using a type that doesn't match its declared `expectedType` — so a `.string` key misused as `.int` shows up in your logs instead of failing quietly.
+The typed accessors — ``stringValue``, ``intValue``, ``doubleValue``,
+``boolValue``, ``dateValue``, ``jsonValue``, and ``decodedValue(_:)`` — log a
+warning when the type you read with doesn't match the key's declared
+``expectedType``. A `.string` key misused as `.int` shows up in your logs rather
+than failing quietly.
 
-JSON-backed keys can decode straight into a model. Make it `Decodable` and opt in:
+JSON-backed keys can decode straight into a model. Make the model `Decodable`
+and opt in:
+
+```swift
+// TODO: example — the original text ended here.
+```
 
 ```swift
 struct FeatureFlags: Decodable, ConfigDecodable {}
