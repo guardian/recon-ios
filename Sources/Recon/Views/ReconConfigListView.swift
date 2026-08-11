@@ -259,10 +259,10 @@ fileprivate struct PreviewConfigProvider: ReconRemoteConfigProvider {
 }
 
 #Preview {
-    if Recon.shared.provider(PreviewConfigProvider.self) == nil {
-        Recon.shared.addRemoteConfigProvider(PreviewConfigProvider())
-    }
-    return NavigationStack {
+    NavigationStack {
         ReconConfigListView()
+    }
+    .task {
+        await Recon.shared.addRemoteConfigProvider(PreviewConfigProvider())
     }
 }
