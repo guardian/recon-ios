@@ -216,8 +216,13 @@ The type annotation is required, because the result type is what selects `Bool`
 over `Int`:
 
 ```swift
+// If using on main actor
 let x: Bool = Recon.value(\.firebase, .isCheckoutV2Enabled)  // ✅
 let x = Recon.value(\.firebase, .isCheckoutV2Enabled)        // ❌ won't compile
+
+// If using off main actor
+let x: Bool = Recon.value(FirebaseRCP.self, .isCheckoutV2Enabled)  // ✅
+let x = Recon.value(FirebaseRCP.self, .isCheckoutV2Enabled)        // ❌ won't compile
 ```
 
 > [!IMPORTANT]
